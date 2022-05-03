@@ -1,0 +1,14 @@
+GET http://localhost:2347/health-check/liveness HTTP/1.1
+
+###
+
+GET http://localhost:2347/health-check/readiness HTTP/1.1
+
+###
+
+POST http://localhost:2345/example HTTP/1.1
+content-type: application/json
+
+{
+    "value": "kaladin123"
+}
