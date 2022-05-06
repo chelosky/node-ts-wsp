@@ -1,12 +1,12 @@
+import Koa from 'koa';
 import cors from '@koa/cors';
 import { Server } from 'http';
-import Koa from 'koa';
-import bodyParser from 'koa-bodyparser';
-import KoaLogger from 'koa-logger';
 import Router from 'koa-router';
-import { IConfigParam } from '../config/interfaces';
-import { ErrorHandler } from './middlewares';
+import bodyParser from 'koa-bodyparser';
+import KoaLogger from 'koa-pino-logger';
 import { AppRouter } from './routes';
+import { ErrorHandler } from './middlewares';
+import { IConfigParam } from '../config/interfaces';
 
 export class AppServer {
     private app: Koa | undefined;

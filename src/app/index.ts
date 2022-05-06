@@ -1,13 +1,22 @@
 import { AppConfig } from "../config";
 import { ENodeErrorType, ENodeSignal } from "../enums";
+import { WhatsappProvider } from "../providers/whatsappProvider";
 import { AppServer } from "../server";
+import { CreateOptions } from 'venom-bot';
+
+const wspOptions: CreateOptions = {
+    session: 'session-name', //name of session
+    multidevice: false // for version not multidevice use false.(default: true)
+}
 
 export class App {
     public async start(): Promise<void>{
         const appConfig = new AppConfig();
         const server = new AppServer(appConfig.getConfig());
+        const wsp = new WhatsappProvider(wspOptions );
 
-    server.start();
+        await wsp.start();
+        server.start();
 
         this._handleNodeSignals(server);
         this._handleNodeErrorTypes(server);
