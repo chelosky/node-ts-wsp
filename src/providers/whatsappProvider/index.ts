@@ -1,20 +1,42 @@
+import { promises as fs } from 'fs';
+import mime from 'mime-types';
 import * as venom from 'venom-bot';
+import { IPetPetGifProvider } from '../../inferfaces';
 
 export class WhatsappProvider{
-    constructor(private options: venom.CreateOptions){ }
+    private client: venom.Whatsapp;
+
+    constructor(private options: venom.CreateOptions, private petPetGifProvider: IPetPetGifProvider){ }
 
     public async start(){
         try {
-            const client = await venom.create(this.options);
-            await this._setUp(client);
+            this.client = await venom.create(this.options);
+            await this._setUp();
         } catch (error) {
             throw error;
         }
     }
 
-    private async _setUp(client: venom.Whatsapp){
-        client.onAnyMessage((message: any) => {
-            console.log(message);
+    public async close(): Promise<void>{
+        if(!this.client){
+            throw '';
+        }
+        await this.client.close();
+    }
+
+    private async _setUp(){
+        this.client.onAnyMessage(async (message: any) => {
+            if(message.isMedia && message.caption == 'PETPETGIF'){
+                const buffer = await this.client.decryptFile(message);
+                const fileName = `TEST`;
+                const fileNameWsp = `${fileName}.${mime.extension(message.mimetype)}`;
+                const fileNameGif = `${fileName}.gif`;
+                await fs.writeFile(fileNameWsp, buffer);
+                // TODO: el nombre del archivo gif generado deberia ser autogenerado y retornalo para enviarlo directo como sticker
+                await this.petPetGifProvider.createGif(fileNameGif, fileNameWsp);
+                await this.client.sendImageAsStickerGif(message.from, fileNameGif);
+
+            }
         });
     }
 // venom

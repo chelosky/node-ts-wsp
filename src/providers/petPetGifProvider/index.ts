@@ -1,19 +1,14 @@
-import * as fs from 'fs';
+import { promises as fs } from 'fs';
 import petPetGif from 'pet-pet-gif';
-import { IFileSystemProvider, IPetPetGifProvider } from "../../inferfaces";
+import { IPetPetGifProvider } from "../../inferfaces";
 
 export class PetPetGifProvider implements IPetPetGifProvider {
     
-    constructor(private fileSystem: IFileSystemProvider){ }
+    constructor(){ }
 
     public async createGif(filename: string, path: string): Promise<boolean> {
         const animatedGif = await this._generateGif(path);
-
-        fs.writeFile(filename, animatedGif, function (err) {
-            if(err){
-                throw err;
-            }
-        });
+        await fs.writeFile(filename, animatedGif);
         return true;
     }
 
