@@ -1,12 +1,12 @@
-import { promises as fs } from 'fs';
 import mime from 'mime-types';
 import * as venom from 'venom-bot';
-import { IPetPetGifProvider } from '../../inferfaces';
+import { EImageType } from '../../enums';
+import { IFileSystemProvider, IPetPetGifProvider } from '../../inferfaces';
 
 export class WhatsappProvider{
     private client: venom.Whatsapp;
 
-    constructor(private options: venom.CreateOptions, private petPetGifProvider: IPetPetGifProvider){ }
+    constructor(private options: venom.CreateOptions, private petPetGifProvider: IPetPetGifProvider, private fileSystemProvider: IFileSystemProvider){ }
 
     public async start(){
         try {
@@ -26,16 +26,26 @@ export class WhatsappProvider{
 
     private async _setUp(){
         this.client.onAnyMessage(async (message: any) => {
-            if(message.isMedia && message.caption == 'PETPETGIF'){
+            const { isMedia, caption, mimetype, isGroupMsg, from, to} = message;
+            if(isMedia && caption == 'PETPETGIF'){
                 const buffer = await this.client.decryptFile(message);
-                const fileName = `TEST`;
-                const fileNameWsp = `${fileName}.${mime.extension(message.mimetype)}`;
-                const fileNameGif = `${fileName}.gif`;
-                await fs.writeFile(fileNameWsp, buffer);
-                // TODO: el nombre del archivo gif generado deberia ser autogenerado y retornalo para enviarlo directo como sticker
-                await this.petPetGifProvider.createGif(fileNameGif, fileNameWsp);
-                await this.client.sendImageAsStickerGif(message.from, fileNameGif);
+                const extension = mime.extension(mimetype);
+                
+                const validImageTypes: string[] = [EImageType.BMP, EImageType.PNG, EImageType.JPG, EImageType.JFIF, EImageType.JPEG];
 
+                if(!extension || !(validImageTypes.includes(extension))) {
+                    throw `${extension} is not a valid image type`;
+                }
+                
+                const { originalFilePath, generatedGifPath } = await this.petPetGifProvider.createGifFromBuffer(buffer, extension as string);
+                
+                const receiver = isGroupMsg ? to : from;
+                await this.client.sendImageAsStickerGif(receiver, generatedGifPath);
+
+                await Promise.all([
+                    this.fileSystemProvider.deleteFile(originalFilePath),
+                    this.fileSystemProvider.deleteFile(generatedGifPath),
+                ]);
             }
         });
     }

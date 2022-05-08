@@ -4,6 +4,7 @@ import { WhatsappProvider } from "../providers/whatsappProvider";
 import { AppServer } from "../server";
 import { CreateOptions } from 'venom-bot';
 import { PetPetGifProvider } from "../providers/petPetGifProvider";
+import { FileSystemProvider } from "../providers/fileSystemProvider";
 
 const wspOptions: CreateOptions = {
     session: 'session-name', //name of session
@@ -14,8 +15,9 @@ export class App {
     public async start(): Promise<void>{
         const appConfig = new AppConfig();
         const server = new AppServer(appConfig.getConfig());
-        const petPetGif = new PetPetGifProvider();
-        const wsp = new WhatsappProvider(wspOptions, petPetGif);
+        const fileSystem = new FileSystemProvider();
+        const petPetGif = new PetPetGifProvider(fileSystem);
+        const wsp = new WhatsappProvider(wspOptions, petPetGif, fileSystem);
 
         await wsp.start();
         server.start();

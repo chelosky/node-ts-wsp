@@ -1,3 +1,6 @@
+import { IPetPetGifResponse } from "./IPetPetGifResponse";
+
 export interface IPetPetGifProvider {
-   createGif: (filename: string, path: string) => Promise<boolean>;
+   createGifFromBuffer: (content: Buffer, extension: string) => Promise<IPetPetGifResponse>;
+   createGifFromPath: (path: string) => Promise<string>;
 }
