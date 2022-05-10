@@ -1,5 +1,5 @@
-import dotenv from 'dotenv';
 import Joi from 'joi';
+import dotenv from 'dotenv';
 import { EEnvironment } from '../enums';
 import { IConfigParam, IEnvironmentParam } from './interfaces';
 

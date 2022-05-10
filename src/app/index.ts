@@ -1,12 +1,11 @@
+import * as venom from 'venom-bot';
 import { AppConfig } from "../config";
+import { AppServer } from "../server";
+import { HANDLERS } from "../handlers";
 import { ENodeErrorType, ENodeSignal } from "../enums";
 import { WhatsappProvider } from "../providers/whatsappProvider";
-import { AppServer } from "../server";
-import { CreateOptions } from 'venom-bot';
-import { PetPetGifProvider } from "../providers/petPetGifProvider";
-import { FileSystemProvider } from "../providers/fileSystemProvider";
 
-const wspOptions: CreateOptions = {
+const wspOptions: venom.CreateOptions = {
     session: 'session-name', //name of session
     multidevice: false // for version not multidevice use false.(default: true)
 }
@@ -15,9 +14,7 @@ export class App {
     public async start(): Promise<void>{
         const appConfig = new AppConfig();
         const server = new AppServer(appConfig.getConfig());
-        const fileSystem = new FileSystemProvider();
-        const petPetGif = new PetPetGifProvider(fileSystem);
-        const wsp = new WhatsappProvider(wspOptions, petPetGif, fileSystem);
+        const wsp = new WhatsappProvider(wspOptions, HANDLERS);
 
         await wsp.start();
         server.start();

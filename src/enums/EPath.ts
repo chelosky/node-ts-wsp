@@ -1,4 +1,4 @@
 export enum EPath {
-    AssetsFolder = './assets/',
-    TempFolder = './temp/',
+    ASSETS_FOLDER = './assets/',
+    TEMP_FOLDER = './temp/',
 }

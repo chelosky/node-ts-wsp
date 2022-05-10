@@ -1,4 +1,4 @@
 export enum ENodeErrorType {
-    UnhandledRejection='unhandledRejection', 
-    UncaughtException='uncaughtException'
+    UNHANDLED_REJECTION='unhandledRejection', 
+    UNCAUGHT_EXCEPTION='uncaughtException'
 }

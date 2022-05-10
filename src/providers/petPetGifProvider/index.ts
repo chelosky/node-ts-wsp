@@ -8,7 +8,7 @@ export class PetPetGifProvider implements IPetPetGifProvider {
     constructor(private fileSystemProvider: IFileSystemProvider){}
 
     public async createGifFromBuffer(content: Buffer, extension: string): Promise<IPetPetGifResponse> {
-        const originalFilePath = `${EPath.TempFolder}${uuidv4()}.${extension}`;
+        const originalFilePath = `${EPath.TEMP_FOLDER}${uuidv4()}.${extension}`;
         await this.fileSystemProvider.writeFile(originalFilePath, content);
         const generatedGifPath = await this.createGifFromPath(originalFilePath);
         return {
@@ -18,7 +18,7 @@ export class PetPetGifProvider implements IPetPetGifProvider {
     }
 
     public async createGifFromPath(path: string): Promise<string> {
-        const filePath = `${EPath.TempFolder}${uuidv4()}.gif`;
+        const filePath = `${EPath.TEMP_FOLDER}${uuidv4()}.gif`;
         const bufferGif = await this._generateGif(path);
         await this.fileSystemProvider.writeFile(filePath, bufferGif);
         return filePath;

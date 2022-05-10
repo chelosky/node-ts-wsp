@@ -5,3 +5,5 @@ export * from "./ENodeErrorType";
 export * from "./EDocType";
 export * from "./EVideoType";
 export * from "./EImageType";
+export * from "./EWspMessageType";
+export * from "./EWspCodeHandlerMessage";

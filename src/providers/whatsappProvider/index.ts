@@ -1,12 +1,11 @@
-import mime from 'mime-types';
 import * as venom from 'venom-bot';
-import { EImageType } from '../../enums';
-import { IFileSystemProvider, IPetPetGifProvider } from '../../inferfaces';
+import { EWspMessageType } from '../../enums';
+import { IWspHandlerFn, IWspHandlerMessageParam } from '../../inferfaces';
 
 export class WhatsappProvider{
     private client: venom.Whatsapp;
 
-    constructor(private options: venom.CreateOptions, private petPetGifProvider: IPetPetGifProvider, private fileSystemProvider: IFileSystemProvider){ }
+    constructor(private options: venom.CreateOptions, private handlers: IWspHandlerMessageParam[]){ }
 
     public async start(){
         try {
@@ -25,30 +24,51 @@ export class WhatsappProvider{
     }
 
     private async _setUp(){
-        this.client.onAnyMessage(async (message: any) => {
-            const { isMedia, caption, mimetype, isGroupMsg, from, to} = message;
-            if(isMedia && caption == 'PETPETGIF'){
-                const buffer = await this.client.decryptFile(message);
-                const extension = mime.extension(mimetype);
-                
-                const validImageTypes: string[] = [EImageType.BMP, EImageType.PNG, EImageType.JPG, EImageType.JFIF, EImageType.JPEG];
+        const onAnyMessageHandlers = this.handlers.filter((handler) => handler.type === EWspMessageType.ANY_MESSAGE);
+        const receiverMessageHandlers = this.handlers.filter((handler) => handler.type === EWspMessageType.RECEIVER_MESSAGE);
 
-                if(!extension || !(validImageTypes.includes(extension))) {
-                    throw `${extension} is not a valid image type`;
-                }
-                
-                const { originalFilePath, generatedGifPath } = await this.petPetGifProvider.createGifFromBuffer(buffer, extension as string);
-                
-                const receiver = isGroupMsg ? to : from;
-                await this.client.sendImageAsStickerGif(receiver, generatedGifPath);
-
-                await Promise.all([
-                    this.fileSystemProvider.deleteFile(originalFilePath),
-                    this.fileSystemProvider.deleteFile(generatedGifPath),
-                ]);
-            }
-        });
+        this.client.onAnyMessage(async (message: venom.Message) => await this._handleMessage(message, onAnyMessageHandlers));
+        this.client.onMessage(async (message: venom.Message) => await this._handleMessage(message, receiverMessageHandlers));
     }
+
+    private async _handleMessage(message: venom.Message, handlers: IWspHandlerMessageParam[]){
+        const { isMedia, caption, body } = message;
+        const bar = isMedia ? caption : body;
+
+        const handlerFn = this._generateHandlerFn(handlers);
+
+        await (handlerFn[bar] || handlerFn['default'])(message);
+    }
+
+    private _generateHandlerFn(handlers: IWspHandlerMessageParam[]): IWspHandlerFn{
+        const handlerFn: IWspHandlerFn = {
+            ['default']: async () => {/**/},
+        };
+        
+        handlers.forEach(handler => {
+            const { code } = handler;
+            handlerFn[code] = async (message: venom.Message) => await this._foo(handler, message);
+        });
+
+        return handlerFn;
+    }
+
+    private async _foo(handler: IWspHandlerMessageParam, message: venom.Message){
+        const { validatorCb, processCb } = handler;
+        try {
+            await validatorCb(this.client, message);
+            await processCb(this.client, message);
+        } catch (error: any) {
+           this._sendErrorNotification(error, message);
+        }
+    }
+
+    private async _sendErrorNotification(error: any, message: venom.Message){
+        const { fromMe, to, from } = message;
+        const receiver = fromMe ? to : from;
+        await this.client.sendText(receiver, error.message)
+    }
+
 // venom
 //     .create({
 //         session: 'session-name', //name of session
